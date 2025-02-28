@@ -1,17 +1,17 @@
-from couchbase_haystack.components.retrievers import CouchbaseEmbeddingRetriever
+from couchbase_haystack.components.retrievers import CouchbaseSearchEmbeddingRetriever
 from couchbase_haystack.document_stores import (
     CouchbaseAuthenticator,
     CouchbaseCertificateAuthenticator,
     CouchbaseClusterOptions,
-    CouchbaseDocumentStore,
     CouchbasePasswordAuthenticator,
+    CouchbaseSearchDocumentStore,
 )
 
 __all__ = [
     "CouchbaseAuthenticator",
     "CouchbaseCertificateAuthenticator",
     "CouchbaseClusterOptions",
-    "CouchbaseDocumentStore",
-    "CouchbaseEmbeddingRetriever",
     "CouchbasePasswordAuthenticator",
+    "CouchbaseSearchDocumentStore",
+    "CouchbaseSearchEmbeddingRetriever",
 ]
