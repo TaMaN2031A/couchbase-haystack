@@ -65,8 +65,16 @@ class NumericRangeQuery(search.NumericRangeQuery):
 
 
 def _normalize_filters(filters: Dict[str, Any]) -> SearchQuery:
-    """
-    Converts Haystack filters in Couchbase compatible filters.
+    """Converts Haystack filters in Couchbase compatible filters.
+
+    Args:
+        filters: Dictionary containing filter conditions.
+
+    Returns:
+        SearchQuery object for Couchbase.
+
+    Raises:
+        FilterError: If filters are not properly formatted.
     """
     if not isinstance(filters, dict):
         msg = "Filters must be a dictionary"
@@ -248,6 +256,15 @@ COMPARISON_OPERATORS = {
 
 
 def create_search_query(field: str, value: Any) -> SearchQuery:
+    """Creates a Couchbase search query based on field and value.
+
+    Args:
+        field: The field name to search in.
+        value: The value to search for.
+
+    Returns:
+        A SearchQuery object suitable for the provided field and value.
+    """
     if isinstance(value, (int, float)):
         number_filter = NumericRangeQuery(min=value, max=value, field=field, inclusive_min=True, inclusive_max=True)
         return number_filter
