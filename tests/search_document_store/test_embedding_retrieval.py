@@ -15,10 +15,10 @@ from couchbase.auth import PasswordAuthenticator
 from couchbase.management.logic.search_index_logic import SearchIndex
 from couchbase.exceptions import SearchIndexNotFoundException
 from couchbase import search
-from couchbase_haystack.document_stores.filters import NumericRangeQuery
+from couchbase_haystack.document_stores.search_filters import NumericRangeQuery
 from datetime import timedelta
-from .common.common import IS_GLOBAL_LEVEL_INDEX
-from .common import common
+from tests.common.common import IS_GLOBAL_LEVEL_INDEX
+from tests.common import common
 
 
 @pytest.mark.skipif(
@@ -33,13 +33,25 @@ from .common import common
     "PASSWORD" not in os.environ,
     reason="Couchbase cluster password not provided",
 )
+@pytest.mark.skipif(
+    "BUCKET_NAME" not in os.environ,
+    reason="Couchbase bucket name not provided",
+)
+@pytest.mark.skipif(
+    "SCOPE_NAME" not in os.environ,
+    reason="Couchbase scope name not provided",
+)
+@pytest.mark.skipif(
+    "COLLECTION_NAME" not in os.environ,
+    reason="Couchbase collection name not provided",
+)
 @pytest.mark.integration
 class TestEmbeddingRetrieval:
     @pytest.fixture()
     def document_store(self):
-        bucket_name = "haystack_integration_test"
-        scope_name = "haystack_test_scope"
-        collection_name = "haystack_collection"
+        bucket_name = os.environ["BUCKET_NAME"]
+        scope_name = os.environ["SCOPE_NAME"]
+        collection_name = os.environ["COLLECTION_NAME"]
         cluster_opts = ClusterOptions(
             authenticator=PasswordAuthenticator(username=os.environ["USER_NAME"], password=os.environ["PASSWORD"]),
             enable_tcp_keep_alive=True,
@@ -53,11 +65,11 @@ class TestEmbeddingRetrieval:
         common.create_scope_if_not_exists(collection_manager, scope_name)
         common.create_collection_if_not_exists(collection_manager, scope_name, collection_name)
         scope = bucket.scope(scope_name)
-        collection = scope.collection(collection_name)
-        index_definition = common.load_json_file("./tests/vector_index.json")
-        index_definition["params"]["mapping"]["types"]["haystack_test_scope.haystack_collection"]["properties"]["embedding"][
-            "fields"
-        ][0]["dims"] = 3
+        index_definition = common.load_json_file(f"{os.path.dirname(__file__)}/vector_index.json")
+        mapping_type = index_definition["params"]["mapping"]["types"]["____scope.collection_____"]
+        del index_definition["params"]["mapping"]["types"]["____scope.collection_____"]
+        mapping_type["properties"]["embedding"]["fields"][0]["dims"] = 3
+        index_definition["params"]["mapping"]["types"][f"{scope_name}.{collection_name}"] = mapping_type
 
         if IS_GLOBAL_LEVEL_INDEX:
             sim = cluster.search_indexes()
@@ -69,7 +81,7 @@ class TestEmbeddingRetrieval:
         except SearchIndexNotFoundException as e:
             search_index = SearchIndex(
                 name=index_definition["name"],
-                source_name=index_definition["sourceName"],
+                source_name=bucket_name,
                 source_type=index_definition["sourceType"],
                 params=index_definition["params"],
                 plan_params=index_definition["planParams"],
@@ -112,7 +124,7 @@ class TestEmbeddingRetrieval:
         assert results[1].content == "blue color"
         assert results[0].score > results[1].score
 
-    def test_embedding_retrieval_with_filter(self, document_store: CouchbaseSearchDocumentStore):
+    def test_embedding_retrieval_with_search_query(self, document_store: CouchbaseSearchDocumentStore):
         query_embedding = [0.9, 0.0, 0.0]
         results = document_store._embedding_retrieval(
             query_embedding=query_embedding,
@@ -124,3 +136,13 @@ class TestEmbeddingRetrieval:
         assert results[0].content == "red color"
         assert results[1].content == "grey color"
         assert results[0].score > results[1].score
+
+    def test_embedding_retrieval_with_filters(self, document_store: CouchbaseSearchDocumentStore):
+        query_embedding = [0.0, 0.9, 0.0]
+        results = document_store._embedding_retrieval(
+            query_embedding=query_embedding,
+            top_k=1,
+            filters={"field": "meta.color", "operator": "==", "value": "red"},
+        )
+        assert len(results) == 1
+        assert results[0].content == "red color"
