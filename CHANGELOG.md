@@ -1,4 +1,22 @@
 
+<a name="v2.1.0"></a>
+## [v2.1.0](https://github.com/Couchbase-Ecosystem/couchbase-haystack/compare/v2.0.0...v2.1.0) (2025-10-27)
+
+### Chore
+
+* code refactor and docs update ([#15](https://github.com/Couchbase-Ecosystem/couchbase-haystack/issues/15))
+* docs reference link fixes ([#14](https://github.com/Couchbase-Ecosystem/couchbase-haystack/issues/14))
+* Move docs generation from docusaurus to mkdocs ([#13](https://github.com/Couchbase-Ecosystem/couchbase-haystack/issues/13))
+
+### Feat
+
+* Support for hyperscale and composite index ([#17](https://github.com/Couchbase-Ecosystem/couchbase-haystack/issues/17))
+
+### Fix
+
+* pandas import error fix ([#16](https://github.com/Couchbase-Ecosystem/couchbase-haystack/issues/16))
+
+
 <a name="v2.0.0"></a>
 ## [v2.0.0](https://github.com/Couchbase-Ecosystem/couchbase-haystack/compare/v1.0.0...v2.0.0) (2025-02-28)
 
