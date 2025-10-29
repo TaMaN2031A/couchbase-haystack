@@ -583,10 +583,10 @@ class CouchbaseQueryDocumentStore(CouchbaseDocumentStore):
     
     Supports two types of vector indexes:
     
-    - **Hyperscale Vector Index (BHIVE)**: Optimized for pure vector searches, scales to billions of documents.
+    - **Hyperscale Vector Indexes**: Optimized for pure vector searches, scales to billions of documents.
       Best for chatbot context (RAG), reverse image search, and anomaly detection.
     
-    - **Composite Vector Index**: Combines vector and scalar indexing. Applies scalar filters before vector search.
+    - **Composite Vector Indexes**: Combines vector and scalar indexing. Applies scalar filters before vector search.
       Best for filtered recommendations, job searches, and supply chain management.
     
     Search types: ANN (fast, approximate) or KNN (exact).
