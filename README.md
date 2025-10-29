@@ -391,7 +391,7 @@ documents: List[Document] = result["retriever"]["documents"]
 
 ### CouchbaseQueryDocumentStore (GSI-based)
 
-The `CouchbaseQueryDocumentStore` uses Couchbase's Global Secondary Index (GSI) with vector support. It's designed for high-performance vector searches at massive scale using SQL++ queries.
+The `CouchbaseQueryDocumentStore` uses Couchbase Global Secondary Index (GSI) for high-performance vector search at massive scale. Supports both **Hyperscale Vector Index (BHIVE)** and **Composite Vector Index** using SQL++ queries.
 
 ```text
                                    +-----------------------------+

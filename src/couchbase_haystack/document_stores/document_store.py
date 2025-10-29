@@ -579,16 +579,20 @@ class CouchbaseSearchDocumentStore(CouchbaseDocumentStore):
 
 
 class CouchbaseQueryDocumentStore(CouchbaseDocumentStore):
-    """CouchbaseQueryDocumentStore is a DocumentStore implementation that uses
-    Couchbase Global Secondary Index (GSI) for vector search capabilities.
-
-    This document store supports two types of vector indexes:
-
-    - BHIVE Index: A dedicated vector index for high-performance ANN vector search
-    - Composite Secondary Index: Includes vectors alongside other fields for combined filtering
-
-    Both index types support various vector similarity metrics and can be configured
-    with additional parameters for optimizing vector search performance.
+    """CouchbaseQueryDocumentStore uses Couchbase Global Secondary Index (GSI) for high-performance vector search.
+    
+    Supports two types of vector indexes:
+    
+    - **Hyperscale Vector Index (BHIVE)**: Optimized for pure vector searches, scales to billions of documents.
+      Best for chatbot context (RAG), reverse image search, and anomaly detection.
+    
+    - **Composite Vector Index**: Combines vector and scalar indexing. Applies scalar filters before vector search.
+      Best for filtered recommendations, job searches, and supply chain management.
+    
+    Search types: ANN (fast, approximate) or KNN (exact).
+    Similarity metrics: COSINE, DOT, L2/EUCLIDEAN, L2_SQUARED/EUCLIDEAN_SQUARED.
+    
+    See [Couchbase documentation](https://docs.couchbase.com/server/current/vector-index/use-vector-indexes.html).
     """
 
     def __init__(

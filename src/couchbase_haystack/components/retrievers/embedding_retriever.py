@@ -16,10 +16,9 @@ from couchbase_haystack.document_stores import (
 @component
 class CouchbaseSearchEmbeddingRetriever:
     """Retrieves documents from the CouchbaseSearchDocumentStore by embedding similarity.
-
-    The similarity is dependent on the vector_search_index used in the CouchbaseSearchDocumentStore and the chosen metric
-    during the creation of the index (i.e. dot product, or l2 norm). See CouchbaseSearchDocumentStore for more
-    information.
+    
+    Uses Search Vector Index (FTS-based) for hybrid searches combining vector, full-text, and geospatial queries.
+    See CouchbaseSearchDocumentStore for more information.
 
     Usage example:
 
@@ -139,10 +138,11 @@ class CouchbaseSearchEmbeddingRetriever:
 
 @component
 class CouchbaseQueryEmbeddingRetriever:
-    """Retrieves documents from the CouchbaseQueryDocumentStore using vector similarity search with GSI indexes.
-
-    The similarity metric used depends on the configuration of the GSI index in Couchbase
-    (e.g., dot product, cosine similarity, squared Euclidean). See CouchbaseQueryDocumentStore for more details.
+    """Retrieves documents from the CouchbaseQueryDocumentStore using vector similarity search.
+    
+    Works with both Hyperscale Vector Index (BHIVE) and Composite Vector Index.
+    Supports ANN (approximate) and KNN (exact) search with various similarity metrics.
+    See CouchbaseQueryDocumentStore for more details.
 
     Usage example:
 
