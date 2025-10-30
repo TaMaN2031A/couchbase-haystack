@@ -57,7 +57,7 @@ The library provides two document store implementations:
    - Use case: E-commerce, travel recommendations with complex search requirements
 
 2. **`CouchbaseQueryDocumentStore`** - Uses Couchbase Global Secondary Index (GSI) with vector support
-   - Supports both **Hyperscale Vector Index (BHIVE)** and **Composite Vector Index**
+   - Supports both **Hyperscale Vector Index** and **Composite Vector Index**
    - Best for: Pure vector searches or filtered vector searches at massive scale
    - Dataset size: Tens of millions to billions of documents
    - Use case: Content recommendations, chatbots, anomaly detection, job searches
@@ -74,7 +74,7 @@ In addition to the document stores, the library includes the following [retrieve
 
 - **`CouchbaseSearchEmbeddingRetriever`** - Works with `CouchbaseSearchDocumentStore` to perform hybrid searches combining vector similarity with full-text and geospatial queries.
 
-- **`CouchbaseQueryEmbeddingRetriever`** - Works with `CouchbaseQueryDocumentStore` to perform high-performance vector similarity searches using GSI indexes (BHIVE or Composite).
+- **`CouchbaseQueryEmbeddingRetriever`** - Works with `CouchbaseQueryDocumentStore` to perform vector similarity searches using Hyperscale or Composite indexes.
 
 The `couchbase-haystack` library uses the [Couchbase Python SDK](https://docs.couchbase.com/python-sdk/current/hello-world/start-using-sdk.html).
 
@@ -84,9 +84,9 @@ Both document stores store Documents as JSON documents in Couchbase. Embeddings 
 
 Couchbase supports three types of vector indexes. This library currently supports two of them:
 
-| Feature | CouchbaseSearchDocumentStore (FTS) | CouchbaseQueryDocumentStore (GSI - BHIVE) | CouchbaseQueryDocumentStore (GSI - Composite) |
+| Feature | CouchbaseSearchDocumentStore (FTS) | CouchbaseQueryDocumentStore (Hyperscale) | CouchbaseQueryDocumentStore (Composite) |
 |---------|-----------------------------------|-------------------------------------------|----------------------------------------------|
-| **Index Type** | Search Vector Index | Hyperscale Vector Index (BHIVE) | Composite Vector Index |
+| **Index Type** | Search Vector Index | Hyperscale Vector Index | Composite Vector Index |
 | **First Available** | Couchbase 7.6 | Couchbase 8.0 | Couchbase 8.0 |
 | **Dataset Size** | Up to ~100 million docs | Tens of millions to billions | Tens of millions to billions |
 | **Best For** | Hybrid searches (vector + text + geo) | Pure vector searches at scale | Filtered vector searches |
@@ -102,7 +102,7 @@ Couchbase supports three types of vector indexes. This library currently support
   - Your dataset is under 100 million documents
   - You want hybrid search capabilities in a single query
 
-- **Use `CouchbaseQueryDocumentStore` with BHIVE (ANN search)** when:
+- **Use `CouchbaseQueryDocumentStore` with Hyperscale Index** when:
   - You need pure vector similarity searches at massive scale
   - You want the lowest memory footprint and best performance
   - Your application needs concurrent updates and searches
@@ -161,7 +161,7 @@ The `CouchbaseSearchDocumentStore` uses Couchbase's Search Service with FTS (Ful
                                    |                             |
                                    |      +----------------+     |
                                    |      |  Data service  |     |
-                                   write_documents    |      +----------------+     |
+                write_documents    |      +----------------+     |
           +------------------------+----->|   properties   |     |
           |                        |      |                |     |
 +---------+--------------------+   |      |   embedding    |     |
@@ -391,7 +391,7 @@ documents: List[Document] = result["retriever"]["documents"]
 
 ### CouchbaseQueryDocumentStore (GSI-based)
 
-The `CouchbaseQueryDocumentStore` uses Couchbase Global Secondary Index (GSI) for high-performance vector search at massive scale. Supports both **Hyperscale Vector Index (BHIVE)** and **Composite Vector Index** using SQL++ queries.
+The `CouchbaseQueryDocumentStore` uses Couchbase Global Secondary Index (GSI) for high-performance vector search at massive scale. Supports both **Hyperscale Vector Index** and **Composite Vector Index** using SQL++ queries.
 
 ```text
                                    +-----------------------------+
@@ -400,7 +400,7 @@ The `CouchbaseQueryDocumentStore` uses Couchbase Global Secondary Index (GSI) fo
                                    |                             |
                                    |      +----------------+     |
                                    |      |  Data service  |     |
-                                   write_documents    |      +----------------+     |
+                write_documents    |      +----------------+     |
           +------------------------+----->|   properties   |     |
           |                        |      |                |     |
 +---------+--------------------+   |      |   embedding    |     |
@@ -411,8 +411,8 @@ The `CouchbaseQueryDocumentStore` uses Couchbase Global Secondary Index (GSI) fo
           |                        |      +--------+--------+    |
           |                        |      |  Index service  |    |
           |                        |      +-----------------+    |
-          +----------------------->|      |       GSI       |    |
-               query_embeddings    |      |  BHIVE/Composite|    |
+          +----------------------->|      |   Hyperscale    |    |
+               query_embeddings    |      |  /Composite     |    |
                                    |      | (for embedding) |    |
                                    |      +-----------------+    |
                                    |                             |
@@ -422,7 +422,7 @@ The `CouchbaseQueryDocumentStore` uses Couchbase Global Secondary Index (GSI) fo
 #### Key Features
 
 - **Two Index Types Supported:**
-  - **Hyperscale Vector Index (BHIVE)**: Optimized for pure vector searches, scales to billions of documents
+  - **Hyperscale Vector Index**: Optimized for pure vector searches, scales to billions of documents
   - **Composite Vector Index**: Combines scalar and vector indexing for filtered searches
 
 - **Search Types:**
@@ -443,8 +443,8 @@ from haystack.utils.auth import Secret
 from couchbase.n1ql import QueryScanConsistency
 from datetime import timedelta
 
-# Example 1: Using BHIVE (Hyperscale Vector Index) for pure vector search
-document_store_bhive = CouchbaseQueryDocumentStore(
+# Example 1: Using (Hyperscale Vector Index) for pure vector search
+document_store_hyperscale = CouchbaseQueryDocumentStore(
     cluster_connection_string=Secret.from_env_var("CB_CONNECTION_STRING"),
     authenticator=CouchbasePasswordAuthenticator(
         username=Secret.from_env_var("CB_USERNAME"),
@@ -639,7 +639,7 @@ You can find more examples in the [examples](examples) directory:
 
 #### GSI-based Examples
 
-- [examples/gsi/indexing_pipeline.py](examples/gsi/indexing_pipeline.py) - Indexing documents using `CouchbaseQueryDocumentStore` with BHIVE or Composite indexes
+- [examples/gsi/indexing_pipeline.py](examples/gsi/indexing_pipeline.py) - Indexing documents using `CouchbaseQueryDocumentStore` with Hyperscale or Composite indexes
 - [examples/gsi/rag_pipeline.py](examples/gsi/rag_pipeline.py) - RAG pipeline using `CouchbaseQueryEmbeddingRetriever` for high-performance vector retrieval
 
 ## License

@@ -140,7 +140,7 @@ class CouchbaseSearchEmbeddingRetriever:
 class CouchbaseQueryEmbeddingRetriever:
     """Retrieves documents from the CouchbaseQueryDocumentStore using vector similarity search.
     
-    Works with both Hyperscale Vector Index (BHIVE) and Composite Vector Index.
+    Works with both Hyperscale Vector Index and Composite Vector Index.
     Supports ANN (approximate) and KNN (exact) search with various similarity metrics.
     See CouchbaseQueryDocumentStore for more details.
 
