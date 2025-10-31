@@ -51,16 +51,8 @@ by [deepset](https://www.deepset.ai). Couchbase supports three types of [vector 
 
 The library provides two document store implementations:
 
-1. **`CouchbaseSearchDocumentStore`** - Uses Couchbase Search Vector Index (FTS-based)
-   - Best for: Hybrid searches combining vector, full-text, and geospatial searches
-   - Dataset size: Up to ~100 million documents
-   - Use case: E-commerce, travel recommendations with complex search requirements
-
-2. **`CouchbaseQueryDocumentStore`** - Uses Couchbase Global Secondary Index (GSI) with vector support
-   - Supports both **Hyperscale Vector Index** and **Composite Vector Index**
-   - Best for: Pure vector searches or filtered vector searches at massive scale
-   - Dataset size: Tens of millions to billions of documents
-   - Use case: Content recommendations, chatbots, anomaly detection, job searches
+- **`CouchbaseSearchDocumentStore`** - Uses Couchbase Search Vector Index (FTS-based)
+- **`CouchbaseQueryDocumentStore`** - Uses Hyperscale Vector Index or  Composite Vector Index
 
 You can start working with these implementations by importing from the `couchbase_haystack` package:
 
@@ -99,7 +91,7 @@ Couchbase supports three types of vector indexes. This library currently support
 
 - **Use `CouchbaseSearchDocumentStore`** when:
   - You need to combine vector searches with full-text or geospatial searches
-  - Your dataset is under 100 million documents
+  - Your dataset is limited to approximately 100 million documents
   - You want hybrid search capabilities in a single query
 
 - **Use `CouchbaseQueryDocumentStore` with Hyperscale Index** when:
@@ -152,8 +144,6 @@ In this example, the container is started using Couchbase Server version `7.6.2`
 
 ### CouchbaseSearchDocumentStore (FTS-based)
 
-The `CouchbaseSearchDocumentStore` uses Couchbase's Search Service with FTS (Full-Text Search) vector indexes. It's ideal for hybrid searches that combine vector similarity with full-text and geospatial queries.
-
 ```text
                                    +-----------------------------+
                                    |       Couchbase Database    |
@@ -180,7 +170,7 @@ The `CouchbaseSearchDocumentStore` uses Couchbase's Search Service with FTS (Ful
                                    +-----------------------------+
 ```
 
-The document store supports both scope-level and global-level vector search indexes:
+The `CouchbaseSearchDocumentStore` document store supports both scope-level and global-level vector search indexes:
 
 - **Scope-level indexes** (default): Created at the scope level, searches only within that scope
 - **Global-level indexes**: Created at the bucket level, can search across all scopes and collections
@@ -391,7 +381,7 @@ documents: List[Document] = result["retriever"]["documents"]
 
 ### CouchbaseQueryDocumentStore (GSI-based)
 
-The `CouchbaseQueryDocumentStore` uses Couchbase Global Secondary Index (GSI) for high-performance vector search at massive scale. Supports both **Hyperscale Vector Index** and **Composite Vector Index** using SQL++ queries.
+The `CouchbaseQueryDocumentStore` supports both **Hyperscale Vector Index** and **Composite Vector Index** types, depending on the underlying indexes you have set up in Couchbase.
 
 ```text
                                    +-----------------------------+
@@ -443,7 +433,6 @@ from haystack.utils.auth import Secret
 from couchbase.n1ql import QueryScanConsistency
 from datetime import timedelta
 
-# Example 1: Using (Hyperscale Vector Index) for pure vector search
 document_store_hyperscale = CouchbaseQueryDocumentStore(
     cluster_connection_string=Secret.from_env_var("CB_CONNECTION_STRING"),
     authenticator=CouchbasePasswordAuthenticator(
@@ -460,21 +449,6 @@ document_store_hyperscale = CouchbaseQueryDocumentStore(
         timeout=timedelta(seconds=60),
         scan_consistency=QueryScanConsistency.NOT_BOUNDED
     )
-)
-
-# Example 2: Using Composite Vector Index for filtered searches
-document_store_composite = CouchbaseQueryDocumentStore(
-    cluster_connection_string=Secret.from_env_var("CB_CONNECTION_STRING"),
-    authenticator=CouchbasePasswordAuthenticator(
-        username=Secret.from_env_var("CB_USERNAME"),
-        password=Secret.from_env_var("CB_PASSWORD")
-    ),
-    bucket="haystack_bucket_name",
-    scope="haystack_scope_name",
-    collection="haystack_collection_name",
-    search_type=QueryVectorSearchType.ANN,
-    similarity=QueryVectorSearchSimilarity.COSINE,
-    nprobes=10
 )
 ```
 
