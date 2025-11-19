@@ -20,14 +20,16 @@ from couchbase_haystack import (
     CouchbaseQueryDocumentStore,
     CouchbaseQueryOptions,
     QueryVectorSearchType,
+    CouchbaseClusterOptions,
 )
+from couchbase.options import KnownConfigProfiles, QueryOptions
 
 logger = logging.getLogger(__name__)
 
 
 def fetch_archive_from_http(url: str, output_dir: str):
     if Path(output_dir).is_dir():
-        logger.warn(f"'{output_dir}' directory already exists. Skipping data download")
+        logger.warning(f"'{output_dir}' directory already exists. Skipping data download")
         return
 
     with requests.get(url, timeout=10, stream=True) as response:
@@ -50,14 +52,15 @@ fetch_archive_from_http(
 #     --env COUCHBASE_ADMINISTRATOR_PASSWORD=passw0rd \
 #     couchbase:enterprise-8.0.0
 
-bucket_name = "haystack_bucket_name"
-scope_name = "haystack_scope_name"
-collection_name = "haystack_collection_name"
-index_name = "haystack_index_name"
+bucket_name = os.getenv("BUCKET_NAME")
+scope_name = os.getenv("SCOPE_NAME")
+collection_name = os.getenv("COLLECTION_NAME")
+index_name = os.getenv("INDEX_NAME")
 
 document_store = CouchbaseQueryDocumentStore(
     cluster_connection_string=Secret.from_env_var("CONNECTION_STRING"),
-    authenticator=CouchbasePasswordAuthenticator(username=Secret.from_token("username"), password=Secret.from_token("password")),
+    authenticator=CouchbasePasswordAuthenticator(username=Secret.from_env_var("USER_NAME"), password=Secret.from_env_var("PASSWORD")),
+    cluster_options=CouchbaseClusterOptions(profile=KnownConfigProfiles.WanDevelopment),
     bucket=bucket_name,
     scope=scope_name,
     collection=collection_name,
@@ -73,7 +76,7 @@ document_store = CouchbaseQueryDocumentStore(
 p = Pipeline()
 p.add_component("text_file_converter", TextFileToDocument())
 p.add_component("cleaner", DocumentCleaner())
-p.add_component("splitter", DocumentSplitter(split_by="sentence", split_length=250, split_overlap=30))
+p.add_component("splitter", DocumentSplitter(split_by="word", split_length=250, split_overlap=30))
 p.add_component("embedder", SentenceTransformersDocumentEmbedder(model="sentence-transformers/all-MiniLM-L6-v2"))
 p.add_component("writer", DocumentWriter(document_store=document_store))
 
@@ -86,6 +89,8 @@ p.connect("embedder.documents", "writer.documents")
 file_paths = [docs_dir / Path(name) for name in os.listdir(docs_dir)]
 result = p.run({"text_file_converter": {"sources": file_paths}})
 
+logger.info(f"Data written to Couchbase: {result}")
+
 # Assuming you have a Docker container running, navigate to <http://localhost:8091>
 # to open the Couchbase Web Console and explore your data.
 
@@ -94,8 +99,9 @@ result = p.run({"text_file_converter": {"sources": file_paths}})
 # this is a current limitation of the couchbase gsi vector index
 cfg = {
     "dimension": 384,
-    "train_list": 500,
     "description": "IVF,PQ32x8",
     "similarity": "L2",
 }
-document_store.scope.query(f"Create Index {index_name} ON {collection_name} (embedding vector) USING GSI WITH {json.dumps(cfg)}")
+document_store.scope.query(f"Create Index {index_name} ON {collection_name} (embedding vector) USING GSI WITH {json.dumps(cfg)}", QueryOptions(timeout=timedelta(seconds=300))).execute()
+
+logger.info(f"Index created: {index_name}")
