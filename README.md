@@ -19,11 +19,9 @@
 
 ----
 
-**Table of Contents**
+# Table of Contents
 
-- [Breaking Changes in Version 2.0.0](#breaking-changes-in-version-200)
 - [Overview](#overview)
-- [Choosing the Right Document Store](#choosing-the-right-document-store)
 - [Installation](#installation)
 - [Usage](#usage)
   - [Running Couchbase](#running-couchbase)
@@ -32,7 +30,7 @@
   - [More Examples](#more-examples)
 - [License](#license)
 
-## Breaking Changes in Version 2.0.0
+### Breaking Changes in Version 2.0.0
 
 > **Important Note:**  
 > In version 2.0.0, the following component names have been changed:
@@ -44,7 +42,7 @@
 
 ## Overview
 
-An integration of [Couchbase](https://www.couchbase.com) NoSQL database with [Haystack v2.0](https://docs.haystack.deepset.ai/v2.0/docs/intro)
+An integration of [Couchbase](https://www.couchbase.com) NoSQL database with [Haystack](https://docs.haystack.deepset.ai/docs/intro)
 by [deepset](https://www.deepset.ai). Couchbase supports three types of [vector indexes](https://docs.couchbase.com/server/current/vector-search/vector-search.html) for AI applications, and this library provides document stores for two of them:
 
 ### Document Stores
@@ -62,7 +60,7 @@ from couchbase_haystack import CouchbaseSearchDocumentStore, CouchbaseQueryDocum
 
 ### Retrievers
 
-In addition to the document stores, the library includes the following [retriever components](https://docs.haystack.deepset.ai/v2.0/docs/retrievers):
+In addition to the document stores, the library includes the following [retriever components](https://docs.haystack.deepset.ai/docs/retrievers):
 
 - **`CouchbaseSearchEmbeddingRetriever`** - Works with `CouchbaseSearchDocumentStore` to perform hybrid searches combining vector similarity with full-text and geospatial queries.
 
@@ -72,7 +70,7 @@ The `couchbase-haystack` library uses the [Couchbase Python SDK](https://docs.co
 
 Both document stores store Documents as JSON documents in Couchbase. Embeddings are stored as part of the document, with indexing and querying managed by different Couchbase services depending on the document store type.
 
-## Choosing the Right Document Store
+### Choosing the Right Document Store
 
 Couchbase supports three types of vector indexes. This library currently supports two of them:
 
@@ -274,7 +272,7 @@ The full list of parameters accepted by `CouchbaseSearchDocumentStore` can be fo
 
 #### Indexing Documents with CouchbaseSearchDocumentStore
 
-With Haystack you can use [DocumentWriter](https://docs.haystack.deepset.ai/v2.0/docs/documentwriter) component to write Documents into a Document Store. In the example below we construct pipeline to write documents to Couchbase using `CouchbaseSearchDocumentStore`:
+With Haystack you can use [DocumentWriter](https://docs.haystack.deepset.ai/docs/documentwriter) component to write Documents into a Document Store. In the example below we construct pipeline to write documents to Couchbase using `CouchbaseSearchDocumentStore`:
 
 ```python
 from haystack import Document
@@ -609,7 +607,7 @@ You can find more examples in the [examples](examples) directory:
 #### Search-based (FTS) Examples
 
 - [examples/search/indexing_pipeline.py](examples/search/indexing_pipeline.py) - Indexing documents using `CouchbaseSearchDocumentStore`
-- [examples/search/rag_pipeline.py](examples/search/rag_pipeline.py) - RAG pipeline using `CouchbaseSearchEmbeddingRetriever` with [HuggingFaceAPIGenerator](https://docs.haystack.deepset.ai/v2.0/docs/huggingfacetgigenerator)
+- [examples/search/rag_pipeline.py](examples/search/rag_pipeline.py) - RAG pipeline using `CouchbaseSearchEmbeddingRetriever` with [HuggingFaceAPIGenerator](https://docs.haystack.deepset.ai/v2.20/docs/huggingfacetgigenerator)
 
 #### GSI-based Examples
 

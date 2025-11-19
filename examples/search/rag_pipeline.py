@@ -1,8 +1,11 @@
+import os
 from haystack import GeneratedAnswer, Pipeline
 from haystack.components.builders.answer_builder import AnswerBuilder
-from haystack.components.builders.prompt_builder import PromptBuilder
+from haystack.components.builders.chat_prompt_builder import ChatPromptBuilder
+from haystack.dataclasses import ChatMessage
 from haystack.components.embedders import SentenceTransformersTextEmbedder
-from haystack.components.generators import HuggingFaceAPIGenerator
+from haystack.components.generators.chat import HuggingFaceAPIChatGenerator
+from haystack.utils.hf import HFGenerationAPIType
 from haystack.utils import Secret
 
 from couchbase_haystack import CouchbasePasswordAuthenticator, CouchbaseSearchDocumentStore, CouchbaseSearchEmbeddingRetriever
@@ -19,46 +22,44 @@ HF_TOKEN = Secret.from_env_var("HF_API_TOKEN")
 #     couchbase:enterprise-7.6.2
 
 document_store = CouchbaseSearchDocumentStore(
-    cluster_connection_string=Secret.from_token("localhost"),
-    authenticator=CouchbasePasswordAuthenticator(username=Secret.from_token("username"), password=Secret.from_token("password")),
-    bucket="haystack_bucket_name",
-    scope="haystack_scope_name",
-    collection="haystack_collection_name",
-    vector_search_index="vector_search_index",
+    cluster_connection_string=Secret.from_env_var("CONNECTION_STRING"),
+    authenticator=CouchbasePasswordAuthenticator(username=Secret.from_env_var("USER_NAME"), password=Secret.from_env_var("PASSWORD")),
+    bucket=os.getenv("BUCKET_NAME"),
+    scope=os.getenv("SCOPE_NAME"),
+    collection=os.getenv("COLLECTION_NAME"),
+    vector_search_index="vector_search",
 )
 
 # Build a RAG pipeline with a Retriever to get relevant documents to the query and a HuggingFaceTGIGenerator
 # interacting with LLMs using a custom prompt.
-prompt_template = """
-Given these documents, answer the question.\nDocuments:
+prompt_messages = [
+    ChatMessage.from_system("You are a helpful assistant that answers questions based on the provided documents."),
+    ChatMessage.from_user("""Given these documents, answer the question.
+Documents:
 {% for doc in documents %}
     {{ doc.content }}
 {% endfor %}
 
-\nQuestion: {{question}}
-\nAnswer:
-"""
+Question: {{question}}
+Answer:""")
+]
 rag_pipeline = Pipeline()
 rag_pipeline.add_component(
     "query_embedder",
     SentenceTransformersTextEmbedder(model="sentence-transformers/all-MiniLM-L6-v2", progress_bar=False),
 )
 rag_pipeline.add_component("retriever", CouchbaseSearchEmbeddingRetriever(document_store=document_store))
-rag_pipeline.add_component("prompt_builder", PromptBuilder(template=prompt_template))
-rag_pipeline.add_component(
-    "llm",
-    HuggingFaceAPIGenerator(
-        api_type="serverless_inference_api",
-        api_params={"model": "mistralai/Mistral-7B-v0.1"},
-    ),
-)
+rag_pipeline.add_component("prompt_builder", ChatPromptBuilder(template=prompt_messages, required_variables=["question"]))
+rag_pipeline.add_component("llm", HuggingFaceAPIChatGenerator(
+    api_type=HFGenerationAPIType.SERVERLESS_INFERENCE_API, 
+    api_params={"model": "mistralai/Mistral-7B-Instruct-v0.2"},
+))
 rag_pipeline.add_component("answer_builder", AnswerBuilder())
 
 rag_pipeline.connect("query_embedder", "retriever.query_embedding")
-rag_pipeline.connect("retriever.documents", "prompt_builder.documents")
-rag_pipeline.connect("prompt_builder.prompt", "llm.prompt")
+rag_pipeline.connect("retriever", "prompt_builder.documents")
+rag_pipeline.connect("prompt_builder", "llm")
 rag_pipeline.connect("llm.replies", "answer_builder.replies")
-rag_pipeline.connect("llm.meta", "answer_builder.meta")
 rag_pipeline.connect("retriever", "answer_builder.documents")
 
 # Ask a question on the data you just added.
