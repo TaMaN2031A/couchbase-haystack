@@ -65,11 +65,10 @@ prompt_template = [
         '''
     ),
     ChatMessage.from_user(
-        '''
-        {{query}}
-        '''
+        '''{{query}}
+
+Answer:'''
     ),
-    ChatMessage.from_system("Answer:")
 ]
 rag_pipeline = Pipeline()
 rag_pipeline.add_component(
